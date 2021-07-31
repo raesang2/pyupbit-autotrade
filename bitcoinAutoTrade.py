@@ -72,8 +72,7 @@ def buy_market_order(ticker):
     # 매수 조건에 해당하는 경우
     # 목표가 < 현재가 이고, 매수 가능한 조건(잔고 5000원 이상)
     # 매수 금액은 대상 코인 리스트 중 오늘 구매한 코인 대상을 제외한 금액
-    #if (target_price < current_price and current_total_krw > minimum_krw and not is_today_buy(ticker)):
-    if (current_total_krw > minimum_krw and not is_today_buy(ticker)):
+    if (target_price < current_price and current_total_krw > minimum_krw and not is_today_buy(ticker)):
         # 매수 주문
         upbit.buy_market_order(ticker, buy_order_price(ticker, current_total_krw) * except_order_ratio)
 #         print("------------------------------------")
