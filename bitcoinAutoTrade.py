@@ -1,6 +1,7 @@
 import time
 import pyupbit
 import datetime
+from turtledemo.clock import tick
 
 # upbit 접속 정보
 access = "xx"
@@ -49,8 +50,7 @@ def get_current_price(ticker):
 
 # 해당 코인이 오늘 매수한 코인인지 판단(최소 거래금액 이상으로 보유한지 여부)
 def is_today_buy(ticker):
-    have_ticker_current_krw = get_current_price(ticker) * get_balance(ticker)   # 가지고 있는 코인 수 * 현재가 로 매도 시 금액 계산
-    
+    have_ticker_current_krw = get_current_price(ticker) * upbit.get_balance(ticker)   # 가지고 있는 코인 수 * 현재가 로 매도 시 금액 계산
     return True if(have_ticker_current_krw > minimum_krw) else False
 
 # 매수 금액 계산
@@ -70,31 +70,20 @@ def buy_market_order(ticker):
     current_total_krw = get_balance("KRW")            # 현재 보유 현금
 
     # 매수 조건에 해당하는 경우
+    # 해당 티커의 매수 주문이 없고,
     # 목표가 < 현재가 이고, 매수 가능한 조건(잔고 5000원 이상)
     # 매수 금액은 대상 코인 리스트 중 오늘 구매한 코인 대상을 제외한 금액
-    if (target_price < current_price and current_total_krw > minimum_krw and not is_today_buy(ticker)):
+    if ((not upbit.get_order(ticker)) and (target_price < current_price) and (current_total_krw > minimum_krw) and (not is_today_buy(ticker))):
         # 매수 주문
         upbit.buy_market_order(ticker, buy_order_price(ticker, current_total_krw) * except_order_ratio)
-#         print("------------------------------------")
-#         print("    ticker")
-#         print(ticker)
-#         print("    current_total_krw")
-#         print(current_total_krw)
-#         print("    buy_order_price")
-#         print(buy_order_price(ticker, current_total_krw))
-#         print("    buy_order_price *")
-#         print(buy_order_price(ticker, current_total_krw)*len(target_tickers))
-#         print("------------------------------------")
-      
 
 # 매도
 def sell_market_order(ticker):
-    current_krw = get_current_price(ticker) * get_balance(ticker)   # 가지고 있는 코인 수 * 현재가 로 매도 시 금액 계산
+    current_krw = get_current_price(ticker) * upbit.get_balance(ticker)  # 가지고 있는 코인 수 * 현재가 로 매도 시 금액 계산
     # 매도 가능한 조건(현재 가진 코인의 가치가 5000원 이상)
     if (current_krw > minimum_krw):
         # 매도 주문
-        upbit.sell_market_order(ticker, get_balance(ticker) * except_order_ratio)
-#         print(current_krw)
+         upbit.sell_market_order(ticker, upbit.get_balance(ticker) * except_order_ratio)
 
 # 로그인
 upbit = pyupbit.Upbit(access, secret)
@@ -110,7 +99,7 @@ while True:
             end_time = start_time + datetime.timedelta(days=1)
     
             # 시작 ~ 마감-10초
-            if start_time < now < end_time - datetime.timedelta(seconds=10):
+            if start_time < now < end_time - datetime.timedelta(seconds=30):
                 buy_market_order(ticker)
                     
             # 해당 시간이 아닌 경우. 매도
